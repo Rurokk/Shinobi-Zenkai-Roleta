@@ -118,7 +118,7 @@ function drawWheel(clans) {
   })`;
 
   const size = wheel.clientWidth || 300;
-  const radius = size * 0.34;
+  const radius = size * 0.32;
   const labelWidth = Math.max(
     30,
     Math.min(76, size * Math.PI / clans.length * 0.9)
@@ -126,7 +126,7 @@ function drawWheel(clans) {
   const fontSize = clans.length > 18 ? 7 : 9;
 
   clans.forEach((clan, i) => {
-    const angle = i * step + step / 2;
+    const angle = i * step + step / 2 - 90;
 
     const label = document.createElement("div");
     label.className = "wheel-label";
