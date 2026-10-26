@@ -294,6 +294,208 @@ async function doSpin() {
   }
 }
 
+function setupTeamPanel() {
+  let panel = document.getElementById("teamPanel");
+  if (panel) return panel;
+
+  panel = document.createElement("section");
+  panel.id = "teamPanel";
+  panel.hidden = true;
+  panel.style.cssText = [
+    "margin-top:20px",
+    "padding:16px",
+    "border:1px solid #d9b66d",
+    "border-radius:12px",
+    "background:#211820",
+    "color:#fff"
+  ].join(";");
+
+  const title = document.createElement("h3");
+  title.textContent = "Gerenciar equipe";
+
+  const description = document.createElement("p");
+  description.textContent =
+    "Cadastre administradores e escolha suas permissões.";
+
+  const userId = document.createElement("input");
+  userId.id = "teamUserId";
+  userId.placeholder = "UUID da conta no Supabase";
+  userId.style.cssText =
+    "width:100%;box-sizing:border-box;padding:10px;margin:8px 0";
+
+  const permissions = [
+    ["consultar_jogadores", "Consultar jogadores e estatísticas"],
+    ["bloquear_jogadores", "Bloquear e desbloquear jogadores"],
+    ["gerenciar_giros", "Adicionar e retirar giros"]
+  ];
+
+  const checks = document.createElement("div");
+
+  permissions.forEach(([key, label]) => {
+    const line = document.createElement("label");
+    line.style.cssText =
+      "display:block;margin:12px 0;line-height:1.5";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.dataset.permission = key;
+    input.checked = key === "consultar_jogadores";
+
+    line.append(input, document.createTextNode(" " + label));
+    checks.appendChild(line);
+  });
+
+  const saveButton = document.createElement("button");
+  saveButton.textContent = "Salvar administrador";
+  saveButton.style.cssText = "padding:10px;margin:8px 0";
+
+  const refreshButton = document.createElement("button");
+  refreshButton.textContent = "Atualizar equipe";
+  refreshButton.style.cssText = "padding:10px;margin:8px";
+
+  const message = document.createElement("p");
+  message.id = "teamMessage";
+
+  const list = document.createElement("div");
+  list.id = "teamList";
+
+  saveButton.addEventListener("click", saveTeamAdmin);
+  refreshButton.addEventListener("click", loadTeamAdmins);
+
+  panel.append(
+    title, description, userId, checks,
+    saveButton, refreshButton, message, list
+  );
+
+  const adminPanel = document.getElementById("adminPanel");
+  if (adminPanel) adminPanel.appendChild(panel);
+
+  return panel;
+}
+
+async function saveTeamAdmin() {
+  const message = document.getElementById("teamMessage");
+  const userId = document.getElementById("teamUserId");
+  const panel = document.getElementById("teamPanel");
+
+  if (!message || !userId || !panel) return;
+
+  const id = userId.value.trim();
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (!uuidPattern.test(id)) {
+    message.textContent = "Digite um UUID válido.";
+    return;
+  }
+
+  const permissions = {};
+  panel.querySelectorAll("[data-permission]").forEach(input => {
+    permissions[input.dataset.permission] = input.checked;
+  });
+
+  message.textContent = "Salvando permissões...";
+
+  try {
+    const { error } = await supabaseClient.rpc(
+      "dono_configurar_admin",
+      {
+        p_user_id: id,
+        p_permissoes: permissions
+      }
+    );
+
+    if (error) throw error;
+
+    message.textContent = "Administrador configurado com sucesso.";
+    userId.value = "";
+    await loadTeamAdmins();
+  } catch (error) {
+    message.textContent = "Erro ao salvar: " + error.message;
+  }
+}
+
+async function loadTeamAdmins() {
+  const message = document.getElementById("teamMessage");
+  const list = document.getElementById("teamList");
+
+  if (!message || !list || !currentUser) return;
+
+  message.textContent = "Carregando equipe...";
+  list.replaceChildren();
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "dono_listar_admins"
+    );
+
+    if (error) throw error;
+
+    const admins = typeof data === "string" ? JSON.parse(data) : data;
+
+    admins.forEach(admin => {
+      const card = document.createElement("div");
+      card.style.cssText =
+        "padding:12px 0;border-bottom:1px solid #55404a";
+
+      const identity = document.createElement("p");
+      identity.textContent =
+        `${admin.cargo === "dono" ? "Dono" : "Administrador"} — ${admin.user_id}`;
+
+      card.appendChild(identity);
+
+      if (admin.cargo === "admin") {
+        const permissionText = document.createElement("p");
+        const p = admin.permissoes || {};
+
+        permissionText.textContent =
+          `Consultar: ${p.consultar_jogadores === true ? "Sim" : "Não"} | ` +
+          `Bloquear: ${p.bloquear_jogadores === true ? "Sim" : "Não"} | ` +
+          `Giros: ${p.gerenciar_giros === true ? "Sim" : "Não"}`;
+
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "Remover administrador";
+        removeButton.style.cssText = "padding:8px;margin:4px";
+
+        removeButton.addEventListener("click", async () => {
+          if (!confirm("Tem certeza de que deseja remover este administrador?")) {
+            return;
+          }
+
+          removeButton.disabled = true;
+
+          try {
+            const { error } = await supabaseClient.rpc(
+              "dono_remover_admin",
+              { p_user_id: admin.user_id }
+            );
+
+            if (error) throw error;
+
+            await loadTeamAdmins();
+          } catch (error) {
+            message.textContent = "Erro ao remover: " + error.message;
+            removeButton.disabled = false;
+          }
+        });
+
+        card.append(permissionText, removeButton);
+      }
+
+      list.appendChild(card);
+    });
+
+    if (!admins.length) {
+      message.textContent = "Nenhuma conta cadastrada na equipe.";
+    } else {
+      message.textContent = `Contas na equipe: ${admins.length}`;
+    }
+  } catch (error) {
+    message.textContent = "Erro ao carregar equipe: " + error.message;
+  }
+}
+
 function setupAdminPanel() {
   let panel = document.getElementById("adminPanel");
   if (panel) return panel;
@@ -361,8 +563,21 @@ async function loadAdminAccess() {
     if (error) throw error;
 
     if (data === true) {
-      panel.hidden = false;
-      await loadAdminPlayers();
+  panel.hidden = false;
+
+  const teamPanel = setupTeamPanel();
+
+  const { data: isOwner, error: ownerError } =
+    await supabaseClient.rpc("sou_dono");
+
+  if (!ownerError && isOwner === true) {
+    teamPanel.hidden = false;
+    await loadTeamAdmins();
+  } else {
+    teamPanel.hidden = true;
+  }
+
+  await loadAdminPlayers();
     }
   } catch (error) {
     console.error("Erro ao verificar acesso administrativo:", error);
