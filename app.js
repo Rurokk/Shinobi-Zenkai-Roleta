@@ -587,7 +587,18 @@ async function loadAdminAccess() {
 async function loadAdminPlayers() {
   const message = document.getElementById("adminMessage");
   const list = document.getElementById("adminPlayers");
+let search = document.getElementById("adminPlayerSearch");
 
+if (!search && list) {
+  search = document.createElement("input");
+  search.id = "adminPlayerSearch";
+  search.type = "search";
+  search.placeholder = "Buscar por nome ou UUID...";
+  search.style.cssText =
+    "width:100%;box-sizing:border-box;padding:12px;margin:8px 0";
+
+  list.parentElement.insertBefore(search, list);
+}
   if (!currentUser || !message || !list) return;
 
   message.textContent = "Carregando jogadores...";
@@ -609,16 +620,35 @@ async function loadAdminPlayers() {
       return;
     }
 
-    message.textContent = `Jogadores encontrados: ${players.length}`;
+    const searchInput = document.getElementById("adminPlayerSearch");
+const query = (searchInput?.value || "").trim().toLocaleLowerCase("pt-BR");
 
-    players.forEach(player => {
+const filteredPlayers = players.filter(player => {
+  const name = (player.nome || "").toLocaleLowerCase("pt-BR");
+  const id = (player.discord_id || "").toLowerCase();
+
+  return name.includes(query) || id.includes(query);
+});
+
+message.textContent =
+  `Jogadores encontrados: ${players.length} | ` +
+  `Exibindo: ${filteredPlayers.length}`;
+if (searchInput && !searchInput.dataset.connected) {
+  searchInput.dataset.connected = "true";
+
+  searchInput.addEventListener("input", () => {
+    loadAdminPlayers();
+  });
+}
+filteredPlayers.forEach(player => {
       const card = document.createElement("div");
 
       card.style.cssText =
         "padding:12px 0;border-bottom:1px solid #55404a";
 
       const id = document.createElement("p");
-      id.textContent = `ID: ${player.discord_id}`;
+      id.textContent =
+  `${player.nome || "Jogador sem nome"} — ${player.discord_id}`;
 
       const details = document.createElement("p");
       details.textContent =
