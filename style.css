@@ -113,3 +113,103 @@ footer {
   .topbar { align-items: flex-start; flex-direction: column; }
   .panel { padding: 16px; }
 }
+
+.wheel-stage {
+  position: relative;
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+  margin: 30px auto;
+}
+
+.wheel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 5px solid #d9ad62;
+  border-radius: 50%;
+  background: #29131d;
+  box-shadow: 0 0 0 5px #17090e, 0 0 28px #8c293c80;
+  transition: transform 5s cubic-bezier(.12,.72,.12,1);
+}
+
+.wheel-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.wheel-label span {
+  position: absolute;
+  display: block;
+  width: var(--label-width);
+  margin-left: calc(var(--label-width) / -2);
+  color: white;
+  font-size: var(--label-size);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+  transform:
+    translateY(calc(-1 * var(--label-radius)))
+    rotate(var(--counter-angle));
+}
+
+.pointer {
+  position: absolute;
+  z-index: 5;
+  top: -8px;
+  left: calc(50% - 12px);
+  width: 0;
+  height: 0;
+  border-top: 25px solid #ffe09a;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+}
+
+.wheel-center {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  width: 66px;
+  height: 66px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  border: 3px solid #e8bd6a;
+  border-radius: 50%;
+  color: #e8bd6a;
+  background: #180910;
+  box-shadow: 0 0 0 4px #29131d;
+}
+
+.wheel-center b { font-size: 24px; }
+.wheel-center small { font-size: 8px; letter-spacing: 1px; }
+.wheel-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff30;
+  font-size: 42px;
+}
+
+#spinBtn {
+  cursor: pointer;
+}
+
+#spinMessage {
+  text-align: center;
+  color: #b99ca5;
+  font-size: 12px;
+}
+
+@media (max-width: 380px) {
+  .wheel-stage { width: min(100%, 285px); }
+  .wheel-center { width: 56px; height: 56px; }
+}
