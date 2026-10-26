@@ -46,7 +46,7 @@ async function init() {
     status.textContent = "Banco conectado";
     systemMessage.textContent =
       "Conexão com o Supabase estabelecida.";
-
+    loginBtn.disabled = false;
     clanList.replaceChildren();
 
     if (!data?.length) {
