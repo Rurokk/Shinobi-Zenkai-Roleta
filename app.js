@@ -209,7 +209,7 @@ function animateWheel(clanName) {
     const segmentCenter = -90 + (index + 0.5) * step;
 
     // A seta fica no topo, em -90°.
-    const targetAngle = -90 - segmentCenter;
+    const targetAngle = 90 - (index + 0.5) * step;
 
     const currentRotation =
       Number(wheel.dataset.rotation || 0);
