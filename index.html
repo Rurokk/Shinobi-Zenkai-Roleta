@@ -1,0 +1,48 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10070a">
+  <title>Roleta do Shinobi Zenkai</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="symbol">忍</span>
+      <div>
+        <strong>SHINOBI ZENKAI</strong>
+        <small>SISTEMA DE CLÃS</small>
+      </div>
+    </div>
+    <span id="connectionStatus" class="status">Verificando conexão...</span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">SEU DESTINO NINJA COMEÇA AQUI</p>
+      <h1>ROLETA <span>SHINOBI</span></h1>
+      <p>Descubra seu clã e comece sua jornada.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Conexão do sistema</h2>
+      <p id="systemMessage">Verificando a conexão com o banco...</p>
+      <button id="loginBtn" disabled>Entrar com Discord</button>
+      <p id="authMessage">O login será habilitado após a configuração.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Roleta de clãs</h2>
+      <p>Os nomes dos clãs aparecerão nas divisões da roleta durante o giro.</p>
+      <div id="clanList" class="clan-list">Carregando clãs...</div>
+    </section>
+  </main>
+
+  <footer>SHINOBI ZENKAI · SUA JORNADA COMEÇA AQUI</footer>
+</body>
+</html>
