@@ -1,0 +1,115 @@
+
+:root {
+  color-scheme: dark;
+  --bg: #10070a;
+  --panel: #1e1017;
+  --gold: #e8bd6a;
+  --red: #c52d43;
+  --text: #f8edf0;
+  --muted: #b99ca5;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, #421725, var(--bg) 65%);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #542432;
+  background: #10070a;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.symbol {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  color: var(--gold);
+  font-size: 25px;
+}
+
+.brand strong, .brand small { display: block; }
+.brand strong { letter-spacing: 1px; }
+.brand small { margin-top: 4px; color: var(--gold); font-size: 10px; }
+
+.status { color: var(--muted); font-size: 12px; }
+
+.container {
+  width: min(900px, 100%);
+  margin: auto;
+  padding: 24px 15px 40px;
+}
+
+.hero { text-align: center; padding: 20px 0; }
+.eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 2px; }
+.hero h1 { font-size: clamp(28px, 7vw, 48px); }
+.hero h1 span { color: var(--gold); }
+.hero p:last-child { color: var(--muted); }
+
+.panel {
+  margin: 16px 0;
+  padding: 20px;
+  border: 1px solid #542432;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #29131d, #170b11);
+}
+
+.panel h2 { margin-top: 0; }
+.panel p { line-height: 1.6; color: var(--muted); }
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 9px;
+  color: white;
+  background: var(--red);
+  font-weight: 800;
+}
+
+button:disabled { opacity: .5; }
+
+.clan-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clan-chip {
+  padding: 8px 11px;
+  border: 1px solid #70404b;
+  border-radius: 20px;
+  background: #28131c;
+  font-size: 12px;
+}
+
+footer {
+  padding: 20px 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 10px;
+}
+
+@media (max-width: 480px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .panel { padding: 16px; }
+}
