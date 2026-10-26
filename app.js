@@ -294,6 +294,227 @@ async function doSpin() {
   }
 }
 
+function setupAdminPanel() {
+  let panel = document.getElementById("adminPanel");
+  if (panel) return panel;
+
+  panel = document.createElement("section");
+  panel.id = "adminPanel";
+  panel.hidden = true;
+
+  panel.style.cssText = [
+    "margin:24px 0",
+    "padding:16px",
+    "border:1px solid #d9b66d",
+    "border-radius:12px",
+    "background:#1b1419",
+    "color:#fff"
+  ].join(";");
+
+  const title = document.createElement("h2");
+  title.textContent = "Painel administrativo";
+
+  const description = document.createElement("p");
+  description.textContent =
+    "Gerencie jogadores, bloqueios e giros extras.";
+
+  const refreshButton = document.createElement("button");
+  refreshButton.textContent = "Atualizar jogadores";
+  refreshButton.style.cssText =
+    "padding:10px;margin:8px 0;cursor:pointer";
+
+  const message = document.createElement("p");
+  message.id = "adminMessage";
+
+  const list = document.createElement("div");
+  list.id = "adminPlayers";
+
+  refreshButton.addEventListener("click", loadAdminPlayers);
+
+  panel.append(title, description, refreshButton, message, list);
+
+  const history = setupHistory();
+  const progress = setupPlayerInfo();
+  const anchor = history || progress || spinMessage;
+
+  if (anchor) {
+    anchor.insertAdjacentElement("afterend", panel);
+  } else {
+    document.body.appendChild(panel);
+  }
+
+  return panel;
+}
+
+async function loadAdminAccess() {
+  const panel = setupAdminPanel();
+
+  panel.hidden = true;
+
+  if (!currentUser || !supabaseClient) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "tem_acesso_admin"
+    );
+
+    if (error) throw error;
+
+    if (data === true) {
+      panel.hidden = false;
+      await loadAdminPlayers();
+    }
+  } catch (error) {
+    console.error("Erro ao verificar acesso administrativo:", error);
+  }
+}
+
+async function loadAdminPlayers() {
+  const message = document.getElementById("adminMessage");
+  const list = document.getElementById("adminPlayers");
+
+  if (!currentUser || !message || !list) return;
+
+  message.textContent = "Carregando jogadores...";
+  list.replaceChildren();
+
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "admin_listar_jogadores"
+    );
+
+    if (error) throw error;
+
+    const players = typeof data === "string"
+      ? JSON.parse(data)
+      : data;
+
+    if (!Array.isArray(players) || players.length === 0) {
+      message.textContent = "Nenhum jogador encontrado.";
+      return;
+    }
+
+    message.textContent = `Jogadores encontrados: ${players.length}`;
+
+    players.forEach(player => {
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "padding:12px 0;border-bottom:1px solid #55404a";
+
+      const id = document.createElement("p");
+      id.textContent = `ID: ${player.discord_id}`;
+
+      const details = document.createElement("p");
+      details.textContent =
+        `Giros usados: ${player.giros_usados}/5 | ` +
+        `Extras: ${player.giros_extras} | ` +
+        `Status: ${player.bloqueado ? "Bloqueado" : "Ativo"}`;
+
+      const blockButton = document.createElement("button");
+      blockButton.textContent = player.bloqueado
+        ? "Desbloquear"
+        : "Bloquear";
+
+      blockButton.style.cssText =
+        "padding:8px;margin:4px;cursor:pointer";
+
+      blockButton.addEventListener("click", async () => {
+        const action = player.bloqueado
+          ? "desbloquear"
+          : "bloquear";
+
+        if (!confirm(`Deseja ${action} este jogador?`)) return;
+
+        blockButton.disabled = true;
+
+        try {
+          const { error } = await supabaseClient.rpc(
+            "admin_definir_bloqueio",
+            {
+              jogador_id: player.discord_id,
+              novo_estado: !player.bloqueado
+            }
+          );
+
+          if (error) throw error;
+
+          await loadAdminPlayers();
+        } catch (error) {
+          alert("Erro: " + error.message);
+          blockButton.disabled = false;
+        }
+      });
+
+      const amount = document.createElement("input");
+      amount.type = "number";
+      amount.min = "1";
+      amount.step = "1";
+      amount.placeholder = "Quantidade";
+      amount.setAttribute("aria-label", "Quantidade de giros extras");
+      amount.style.cssText =
+        "width:110px;padding:8px;margin:4px";
+
+      const addButton = document.createElement("button");
+      addButton.textContent = "Aplicar giros";
+      addButton.style.cssText =
+        "padding:8px;margin:4px;cursor:pointer";
+
+      addButton.addEventListener("click", async () => {
+        const value = Number(amount.value);
+
+        if (!Number.isSafeInteger(value) || value <= 0) {
+          alert("Digite uma quantidade inteira maior que zero.");
+          return;
+        }
+
+        const operation = prompt(
+          "Digite ADICIONAR ou RETIRAR para confirmar:"
+        );
+
+        if (!operation) return;
+
+        const normalized = operation.trim().toUpperCase();
+
+        if (!["ADICIONAR", "RETIRAR"].includes(normalized)) {
+          alert("Operação inválida.");
+          return;
+        }
+
+        const quantity = normalized === "RETIRAR"
+          ? -value
+          : value;
+
+        addButton.disabled = true;
+
+        try {
+          const { error } = await supabaseClient.rpc(
+            "admin_ajustar_giros",
+            {
+              jogador_id: player.discord_id,
+              quantidade: quantity
+            }
+          );
+
+          if (error) throw error;
+
+          await loadAdminPlayers();
+        } catch (error) {
+          alert("Erro: " + error.message);
+          addButton.disabled = false;
+        }
+      });
+
+      card.append(id, details, blockButton, amount, addButton);
+      list.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Erro ao listar jogadores:", error);
+    message.textContent =
+      "Não foi possível carregar jogadores: " + error.message;
+  }
+}
+
 async function updateAuthState(session) {
   currentUser = session?.user || null;
 
@@ -307,7 +528,10 @@ async function updateAuthState(session) {
       "jogador"}`;
 
     await updatePlayerData();
+    await loadAdminAccess();
   } else {
+    const adminPanel = document.getElementById("adminPanel");
+if (adminPanel) adminPanel.hidden = true;
     loginBtn.textContent = "Entrar com Discord";
     loginBtn.disabled = false;
     authMessage.textContent = "Entre com o Discord para jogar.";
