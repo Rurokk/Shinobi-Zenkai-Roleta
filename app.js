@@ -47,19 +47,13 @@ async function init() {
     systemMessage.textContent =
       "Conexão com o Supabase estabelecida.";
     loginBtn.disabled = false;
-    clanList.replaceChildren();
+    
+drawWheel(data || []);
 
-    if (!data?.length) {
-      clanList.textContent = "Nenhum clã ativo encontrado.";
-      return;
-    }
+document.getElementById("spinBtn").disabled = true;
+document.getElementById("spinMessage").textContent =
+  "Roleta carregada. O sorteio seguro será ativado na próxima etapa.";
 
-    data.forEach(clan => {
-      const chip = document.createElement("span");
-      chip.className = "clan-chip";
-      chip.textContent = clan.nome;
-      clanList.appendChild(chip);
-    });
 
   } catch (error) {
     console.error("Erro de conexão:", error);
