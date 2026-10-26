@@ -93,4 +93,56 @@ loginBtn.addEventListener("click", async () => {
   }
 });
 
+function drawWheel(clans) {
+  const wheel = document.getElementById("wheel");
+  if (!wheel) return;
+
+  wheel.querySelectorAll(".wheel-label").forEach(el => el.remove());
+
+  if (!clans || clans.length === 0) {
+    wheel.style.background = "#29131d";
+    return;
+  }
+
+  const colors = [
+    "#792238", "#34202d", "#a43b46", "#4b2637",
+    "#986c3d", "#40202c", "#67233b", "#53313a"
+  ];
+
+  const step = 360 / clans.length;
+
+  wheel.style.background = `conic-gradient(from -90deg, ${
+    clans.map((clan, i) =>
+      `${colors[i % colors.length]} ${i * step}deg ${(i + 1) * step}deg`
+    ).join(",")
+  })`;
+
+  const size = wheel.clientWidth || 300;
+  const radius = size * 0.34;
+  const labelWidth = Math.max(
+    30,
+    Math.min(76, size * Math.PI / clans.length * 0.9)
+  );
+  const fontSize = clans.length > 18 ? 7 : 9;
+
+  clans.forEach((clan, i) => {
+    const angle = i * step + step / 2;
+
+    const label = document.createElement("div");
+    label.className = "wheel-label";
+    label.style.transform = `rotate(${angle}deg)`;
+
+    const span = document.createElement("span");
+    span.textContent = clan.nome;
+    span.style.setProperty("--label-width", `${labelWidth}px`);
+    span.style.setProperty("--label-size", `${fontSize}px`);
+    span.style.setProperty("--label-radius", `${radius}px`);
+    span.style.setProperty("--counter-angle", `${-angle}deg`);
+
+    label.appendChild(span);
+    wheel.appendChild(label);
+  });
+}
+
+
 init();
