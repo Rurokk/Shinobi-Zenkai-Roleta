@@ -1,5 +1,5 @@
 
-const SUPABASE_URL = "https://sllolviwcpkyjqrcuoas.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://sllolviwcpkyjqrcuoas.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IiiljDKowBA5XvvbbIu03A_r18Ikfj5";
 
 const status = document.getElementById("connectionStatus");
