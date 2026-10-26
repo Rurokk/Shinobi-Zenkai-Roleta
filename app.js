@@ -118,10 +118,9 @@ function drawWheel(clans) {
   })`;
 
   const size = wheel.clientWidth || 300;
-  const radius = size * 0.32;
-  
-const labelWidth = Math.min(105, size * 0.36);
-const fontSize = size < 280 ? 9 : 11;
+  const radius = size * 0.39;
+const labelWidth = Math.min(68, size * 0.24);
+const fontSize = size < 280 ? 8 : 9;
 
   clans.forEach((clan, i) => {
     const angle = i * step + step / 2 - 90;
@@ -135,7 +134,7 @@ const fontSize = size < 280 ? 9 : 11;
     span.style.setProperty("--label-width", `${labelWidth}px`);
     span.style.setProperty("--label-size", `${fontSize}px`);
     span.style.setProperty("--label-radius", `${radius}px`);
-    span.style.setProperty("--counter-angle", "0deg");
+    span.style.setProperty("--counter-angle", `${-angle}deg`);
 
     label.appendChild(span);
     wheel.appendChild(label);
