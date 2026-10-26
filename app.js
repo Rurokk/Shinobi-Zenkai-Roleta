@@ -97,7 +97,7 @@ async function loadClans() {
     .from("cla_opcoes")
     .select("id,nome,peso,ativo")
     .eq("ativo", true)
-    .order("nome");
+    .order("id");
 
   if (error) throw error;
 
@@ -182,57 +182,82 @@ async function updatePlayerData() {
   await loadHistory();
 }
 
+
 function animateWheel(clanName) {
   return new Promise(resolve => {
     const wheel = document.getElementById("wheel");
+
     if (!wheel || !clans.length) {
       resolve();
       return;
     }
 
-    const index = clans.findIndex(clan => clan.nome === clanName);
+    const index = clans.findIndex(
+      clan => clan.nome === clanName
+    );
 
     if (index < 0) {
+      console.error("Clã sorteado não encontrado:", clanName);
       resolve();
       return;
     }
 
     const step = 360 / clans.length;
-    const targetAngle = -(index + 0.5) * step;
+
+    // O primeiro segmento começa no topo (-90°).
+    // Calculamos o centro exato do segmento sorteado.
+    const segmentCenter = -90 + (index + 0.5) * step;
+
+    // A seta fica no topo, em -90°.
+    const targetAngle = -90 - segmentCenter;
+
     const currentRotation =
       Number(wheel.dataset.rotation || 0);
 
-    const normalizedCurrent =
+    const currentNormalized =
       ((currentRotation % 360) + 360) % 360;
 
-    const normalizedTarget =
+    const targetNormalized =
       ((targetAngle % 360) + 360) % 360;
 
     const adjustment =
-      (normalizedTarget - normalizedCurrent + 360) % 360;
+      (targetNormalized - currentNormalized + 360) % 360;
 
     const finalRotation =
       currentRotation + 360 * 6 + adjustment;
 
+    let finished = false;
+
+    function finish() {
+      if (finished) return;
+      finished = true;
+
+      wheel.removeEventListener("transitionend", onEnd);
+      clearTimeout(fallback);
+
+      resolve();
+    }
+
+    function onEnd(event) {
+      if (event.target === wheel && event.propertyName === "transform") {
+        finish();
+      }
+    }
+
+    wheel.addEventListener("transitionend", onEnd);
+
+    const fallback = setTimeout(finish, 5500);
+
     wheel.style.transition =
       "transform 5s cubic-bezier(0.12, 0.75, 0.12, 1)";
-    wheel.style.transform = `rotate(${finalRotation}deg)`;
+
+    wheel.style.transform =
+      `rotate(${finalRotation}deg)`;
+
     wheel.dataset.rotation = String(finalRotation);
-
-    const finish = () => {
-      wheel.removeEventListener("transitionend", finish);
-      resolve();
-    };
-
-    wheel.addEventListener("transitionend", finish, { once: true });
-
-    // Evita que a interface fique presa se a transição não disparar.
-    setTimeout(() => {
-      wheel.removeEventListener("transitionend", finish);
-      resolve();
-    }, 5500);
   });
 }
+
 
 async function doSpin() {
   if (!supabaseClient || !currentUser || spinning) return;
